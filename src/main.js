@@ -1,24 +1,70 @@
 import { promises as fs } from "fs"
-import * as http from "node:http"
-import * as os from "node:os"
+import * as http from "http"
 
-const PORT = 3_000
-const hostName = os.hostname()
-const server = http.createServer((req, res) => {
-  const url = req.url
+
+const PORT = 3_001
+
+const server = http.createServer(async (req, res) => {
+
+
+  const url = req.url.split('/').filter(Boolean)
+
+
   console.log(url);
-  if (url == '/javlon') {
-    res.end(`okay javlon`)
+
+  if (url.length == 0) {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    return res.end('home page')
   }
-  else if (url == "hello") {
-    res.end("helloo world")
-  } else {
-    res.end("404")
+
+  if (url[0] === "posts") {
+    const json = await fs.readFile("./Json/posts.json", "utf-8");
+
+    const parse = JSON.parse(json)
+    const filter = parse.filter(e => e.id == url[1])
+
+    if (filter.length > 0) {
+      res.writeHead(200, { "content-type": "application/json" })
+      res.end(JSON.stringify(filter))
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(json)
   }
+
+  if (url[0] === "comments") {
+    const json = await fs.readFile("./Json/comments.json", "utf-8")
+
+    const parse = JSON.parse(json)
+    const filter = parse.filter((item) => item.id == url[1])
+
+    if (filter.length > 0) {
+      res.writeHead(200, { "content-type": "application/json" })
+      res.end(JSON.stringify(filter))
+    }
+    res.writeHead(200, { "content-type": "application/json" })
+
+    return res.end(json)
+  }
+  if (url[0] === "albums") {
+    const json = await fs.readFile("./Json/albums.json", "utf-8")
+
+    const parse = JSON.parse(json)
+    const filter = parse.filter(el => el.id == url[1])
+
+    if (filter.length > 0) {
+      res.writeHead(200, { "content-type": "application/json" })
+      return res.end(JSON.stringify(filter))
+    }
+
+    res.writeHead(200, { "content-type": "application/json" })
+    return res.end(json)
+
+  }
+  res.writeHead(404, "not found", { "content-type": "text/html" })
+  return res.end("404 NOT FOUND")
 })
 
-
-server.listen(PORT, hostName, () => {
-  console.log(`server on ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`${PORT} yondi `);
 
 })
